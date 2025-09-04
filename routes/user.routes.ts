@@ -1,0 +1,47 @@
+import express from "express";
+import db from "../db/index.ts";
+import { eq } from "drizzle-orm";
+import { randomBytes, createHmac } from "crypto";
+import { usersTable } from "../models/user.model.js";
+
+const router = express.Router();
+
+router.post("/signup", async (req, res) => {
+  const { firstName, lastName, email, password } = req.body;
+  const [existingUser] = await db
+    .select({
+      id: usersTable.id,
+    })
+    .from(usersTable)
+    .where(eq(usersTable.email, email));
+  if (existingUser)
+    return res.status(400).json({
+      success: false,
+      error: `User with email ${email} already exists!`,
+    });
+
+  // Hash the password using buildin node.js module crypto
+  const salt = randomBytes(256).toString("hex");
+  const hashedPassword = createHmac("sha256", salt)
+    .update(password)
+    .digest("hex");
+
+  // Create new user
+  const [user] = await db
+    .insert(usersTable)
+    .values({
+      firstName,
+      lastName,
+      email,
+      password: hashedPassword,
+      salt,
+    })
+    .returning({ id: usersTable.id });
+
+  return res.status(201).json({
+    success: true,
+    message: `new user created successfully. userId: ${user.id}`,
+  });
+});
+
+export default router;
