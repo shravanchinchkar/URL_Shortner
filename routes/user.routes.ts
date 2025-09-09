@@ -1,10 +1,13 @@
+import "dotenv/config";
+import jwt from "jsonwebtoken";
 import express, { Router } from "express";
 import { hashedPasswordWithSalt } from "../utils/hash";
-import { signupSchema } from "../validation/request.validation";
 import { getUserByEmail, createNewUser } from "../services/user.service";
+import { signupSchema, signinSchema } from "../validation/request.validation";
 
 const router: Router = express.Router();
 
+// following is the signup route
 router.post("/signup", async (req, res) => {
   const validateInput = await signupSchema.safeParseAsync(req.body);
 
@@ -43,6 +46,41 @@ router.post("/signup", async (req, res) => {
     success: true,
     message: `new user created successfully. userId: ${user.id}`,
   });
+});
+
+// following is the signin route
+router.post("/signin", async (req, res) => {
+  const validateInput = await signinSchema.safeParseAsync(req.body);
+  if (!validateInput.success) {
+    return res
+      .status(400)
+      .json({ success: false, error: validateInput.error.format() });
+  }
+
+  const { email, password } = validateInput.data;
+
+  const existingUser = await getUserByEmail(email);
+  if (!existingUser) {
+    return res.status(400).json({
+      success: false,
+      error: `User with email ${email} does not exists`,
+    });
+  }
+
+  const { hashedPassword } = hashedPasswordWithSalt(
+    password,
+    existingUser.salt
+  );
+
+  if (existingUser.password !== hashedPassword) {
+    return res.status(400).json({ success: false, error: "Invalid Password" });
+  }
+
+  const token = jwt.sign(existingUser.id, process.env.JWT_SECRET!);
+
+  return res
+    .status(200)
+    .json({ success: true, message: "Signin successful!", token: token });
 });
 
 export default router;
