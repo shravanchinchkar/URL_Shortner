@@ -1,9 +1,7 @@
-import db from "../db/index";
-import { eq } from "drizzle-orm";
 import express, { Router } from "express";
-import { randomBytes, createHmac } from "crypto";
-import { usersTable } from "../models/user.model";
+import { hashedPasswordWithSalt } from "../utils/hash";
 import { signupSchema } from "../validation/request.validation";
+import { getUserByEmail, createNewUser } from "../services/user.service";
 
 const router: Router = express.Router();
 
@@ -20,12 +18,8 @@ router.post("/signup", async (req, res) => {
 
   const { firstName, lastName, email, password } = validateInput.data;
 
-  const [existingUser] = await db
-    .select({
-      id: usersTable.id,
-    })
-    .from(usersTable)
-    .where(eq(usersTable.email, email));
+  // check whether the email already exists or not
+  const existingUser = await getUserByEmail(email);
 
   if (existingUser)
     return res.status(400).json({
@@ -34,22 +28,16 @@ router.post("/signup", async (req, res) => {
     });
 
   // Hash the password using buildin node.js module crypto
-  const salt = randomBytes(256).toString("hex");
-  const hashedPassword = createHmac("sha256", salt)
-    .update(password)
-    .digest("hex");
+  const { salt, hashedPassword } = hashedPasswordWithSalt(password);
 
   // Create new user
-  const [user] = await db
-    .insert(usersTable)
-    .values({
-      firstName,
-      lastName,
-      email,
-      password: hashedPassword,
-      salt,
-    })
-    .returning({ id: usersTable.id });
+  const user = await createNewUser({
+    firstName,
+    lastName,
+    email,
+    password: hashedPassword,
+    salt,
+  });
 
   return res.status(201).json({
     success: true,
