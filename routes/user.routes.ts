@@ -1,19 +1,32 @@
-import express from "express";
-import db from "../db/index.ts";
+import db from "../db/index";
 import { eq } from "drizzle-orm";
+import express, { Router } from "express";
 import { randomBytes, createHmac } from "crypto";
-import { usersTable } from "../models/user.model.js";
+import { usersTable } from "../models/user.model";
+import { signupSchema } from "../validation/request.validation";
 
-const router = express.Router();
+const router: Router = express.Router();
 
 router.post("/signup", async (req, res) => {
-  const { firstName, lastName, email, password } = req.body;
+  const validateInput = await signupSchema.safeParseAsync(req.body);
+
+  if (!validateInput.success) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid Inputs",
+      error: validateInput.error.format(),
+    });
+  }
+
+  const { firstName, lastName, email, password } = validateInput.data;
+
   const [existingUser] = await db
     .select({
       id: usersTable.id,
     })
     .from(usersTable)
     .where(eq(usersTable.email, email));
+
   if (existingUser)
     return res.status(400).json({
       success: false,
