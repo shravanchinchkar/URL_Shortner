@@ -1,9 +1,12 @@
 import "dotenv/config";
-import jwt from "jsonwebtoken";
 import express, { Router } from "express";
+import { createToken } from "../utils/generateToken";
 import { hashedPasswordWithSalt } from "../utils/hash";
 import { getUserByEmail, createNewUser } from "../services/user.service";
-import { signupSchema, signinSchema } from "../validation/request.validation";
+import {
+  signupSchema,
+  signinSchema,
+} from "../validation/user.request.validation";
 
 const router: Router = express.Router();
 
@@ -76,7 +79,8 @@ router.post("/signin", async (req, res) => {
     return res.status(400).json({ success: false, error: "Invalid Password" });
   }
 
-  const token = jwt.sign(existingUser.id, process.env.JWT_SECRET!);
+  // const token = jwt.sign(existingUser.id, process.env.JWT_SECRET!);
+  const token = await createToken({ id: existingUser.id });
 
   return res
     .status(200)
