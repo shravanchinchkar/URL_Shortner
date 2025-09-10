@@ -40,6 +40,21 @@ export async function getAllCodes(id: string) {
   return result;
 }
 
+export async function getURLById(id: string) {
+  try {
+    const [existingURLById] = await db
+      .select({
+        id: urlsTable.id,
+      })
+      .from(urlsTable)
+      .where(eq(urlsTable.id, id));
+    return existingURLById;
+  } catch (error) {
+    console.error(`Error while getting url of id:${id}`);
+    return null;
+  }
+}
+
 export async function deleteURL(urlId: string, userId: string) {
   const response = await db
     .delete(urlsTable)

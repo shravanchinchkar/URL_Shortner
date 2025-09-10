@@ -6,6 +6,7 @@ import {
   shortenURL,
   redirectURL,
   getAllCodes,
+  getURLById,
   deleteURL,
 } from "../services/url.service";
 
@@ -20,7 +21,7 @@ declare global {
   }
 }
 
-// create a shorten URL 
+// create a shorten URL
 router.post(
   "/shorten",
   ensureAuthenticated,
@@ -60,7 +61,12 @@ router.delete(
     const urlId = req.params.id;
     const userId = req.user?.id;
 
-    const response = await deleteURL(urlId, userId);
+    const existingURLById = await getURLById(urlId);
+
+    if (!existingURLById) {
+      return res.status(400).json({ success: false, error: "Invalid URL Id!" });
+    }
+    const response = await deleteURL(existingURLById.id, userId);
     if (response.rowCount === 0) {
       return res
         .status(401)
