@@ -2,7 +2,12 @@ import express from "express";
 import { Request, Response, Router } from "express";
 import { ensureAuthenticated } from "../middlewares/auth.middleware";
 import { shortenURLSchema } from "../validation/user.request.validation";
-import { shortenURL, redirectURL, getAllCodes } from "../services/url.service";
+import {
+  shortenURL,
+  redirectURL,
+  getAllCodes,
+  deleteURL,
+} from "../services/url.service";
 
 const router: Router = express.Router();
 
@@ -15,7 +20,7 @@ declare global {
   }
 }
 
-// create a shorten URL
+// create a shorten URL 
 router.post(
   "/shorten",
   ensureAuthenticated,
@@ -37,13 +42,31 @@ router.post(
   }
 );
 
-// get all the shortcode for the specific user
+// get all the shortcode for the logged in user only
 router.get(
   "/codes",
   ensureAuthenticated,
   async (req: Request, res: Response) => {
     const result = await getAllCodes(req.user?.id);
     return res.status(200).json({ result });
+  }
+);
+
+// delete a specific url of logged in user only
+router.delete(
+  "/:id",
+  ensureAuthenticated,
+  async (req: Request, res: Response) => {
+    const urlId = req.params.id;
+    const userId = req.user?.id;
+
+    const response = await deleteURL(urlId, userId);
+    if (response.rowCount === 0) {
+      return res
+        .status(401)
+        .json({ success: false, error: "Unauthorized request!" });
+    }
+    return res.status(204).json({ deleted: true });
   }
 );
 

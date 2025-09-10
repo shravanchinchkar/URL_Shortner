@@ -1,7 +1,6 @@
 import db from "../db/index";
 import { nanoid } from "nanoid";
-import { eq } from "drizzle-orm";
-import { NextFunction } from "express";
+import { and, eq } from "drizzle-orm";
 import { urlsTable } from "../models/url.model";
 
 export async function shortenURL(url: string, userId: string, code?: string) {
@@ -37,6 +36,13 @@ export async function getAllCodes(id: string) {
     .select()
     .from(urlsTable)
     .where(eq(urlsTable.userId, id));
-    
+
   return result;
+}
+
+export async function deleteURL(urlId: string, userId: string) {
+  const response = await db
+    .delete(urlsTable)
+    .where(and(eq(urlsTable.id, urlId), eq(urlsTable.userId, userId)));
+  return response;
 }
