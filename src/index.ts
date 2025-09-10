@@ -15,7 +15,7 @@ app.get("/", (req, res) => {
     message: `Server is up and runnig at PORT ${PORT}`,
   });
 });
-app.use("/url", urlRouters);
 app.use("/user", userRoutes);
+app.use("/url", urlRouters);
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
