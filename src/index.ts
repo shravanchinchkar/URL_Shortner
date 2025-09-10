@@ -1,5 +1,6 @@
 import express from "express";
 import userRoutes from "../routes/user.routes";
+import urlRouters from "../routes/url.routes";
 import { authMiddleware } from "../middlewares/auth.middleware";
 
 const app = express();
@@ -14,6 +15,7 @@ app.get("/", (req, res) => {
     message: `Server is up and runnig at PORT ${PORT}`,
   });
 });
+app.use("/url", urlRouters);
 app.use("/user", userRoutes);
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

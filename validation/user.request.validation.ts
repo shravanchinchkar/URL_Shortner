@@ -19,3 +19,8 @@ export const signinSchema = z.object({
     .string()
     .min(6, { message: "Password must be of minimum 6 characters" }),
 });
+
+export const shortenURLSchema = z.object({
+  url: z.url(),
+  code: z.string().optional(),
+});

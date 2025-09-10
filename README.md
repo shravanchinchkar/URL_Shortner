@@ -20,21 +20,16 @@ Make sure you have the following installed on your system:
 | Category         | Technology        | Purpose                               |
 | ---------------- | ----------------- | ------------------------------------- |
 | Backend          | Node.js + Express | REST API development                  |
+| Language         | Typescript        | Scripting language                    |
+| Input Validation | Zod               | validating the user input             |
 | Database         | PostgreSQL        | Relational data store                 |
 | ORM              | Drizzle ORM       | Type-safe database queries and schema |
 | Containerization | Docker + Compose  | Local PostgreSQL instance             |
 | Authentication   | JWT               | Securing private routes               |
 | Testing Tool     | Postman           | Manual API testing                    |
+| Random Code      | nanoid            | Creating random short code            |
 
 ---
-
-## 📦 NPM Dependencies
-
-Run this to install all required packages:
-
-```bash
-npm install express drizzle-orm pg jsonwebtoken bcrypt dotenv
-```
 
 ## Auth Routes
 
