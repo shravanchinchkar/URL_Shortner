@@ -8,6 +8,7 @@ import {
   getAllCodes,
   getURLById,
   deleteURL,
+  updateShortCode,
 } from "../services/url.service";
 
 const router: Router = express.Router();
@@ -73,6 +74,37 @@ router.delete(
         .json({ success: false, error: "Unauthorized request!" });
     }
     return res.status(204).json({ deleted: true });
+  }
+);
+
+router.patch(
+  "/:id",
+  ensureAuthenticated,
+  async (req: Request, res: Response) => {
+    const urlId = req.params.id;
+    const userId = req.user?.id;
+    const existingURLById = await getURLById(urlId);
+
+    if (!existingURLById) {
+      return res.status(400).json({ success: false, error: "Invalid URL Id!" });
+    }
+    const { shortCode } = req.body;
+
+    const response = await updateShortCode(
+      existingURLById.id,
+      userId,
+      shortCode
+    );
+
+    if (!response) {
+      return res.status(400).json({ error: "Unauthorized URL id!" });
+    }
+    
+    return res.status(200).json({
+      oldData: existingURLById,
+      newShortCode: shortCode,
+      newData: response,
+    });
   }
 );
 

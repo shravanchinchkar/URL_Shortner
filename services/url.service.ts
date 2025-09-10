@@ -45,6 +45,8 @@ export async function getURLById(id: string) {
     const [existingURLById] = await db
       .select({
         id: urlsTable.id,
+        shortCode: urlsTable.shortCode,
+        targetURL: urlsTable.targetURL,
       })
       .from(urlsTable)
       .where(eq(urlsTable.id, id));
@@ -53,6 +55,23 @@ export async function getURLById(id: string) {
     console.error(`Error while getting url of id:${id}`);
     return null;
   }
+}
+
+export async function updateShortCode(
+  urlId: string,
+  userId: string,
+  shortCode: string
+) {
+  const [response] = await db
+    .update(urlsTable)
+    .set({ shortCode: shortCode })
+    .where(and(eq(urlsTable.id, urlId), eq(urlsTable.userId, userId)))
+    .returning({
+      id: urlsTable.id,
+      shortCode: urlsTable.shortCode,
+      targetURL: urlsTable.targetURL,
+    });
+  return response;
 }
 
 export async function deleteURL(urlId: string, userId: string) {
