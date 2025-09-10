@@ -1,11 +1,10 @@
-import db from "../db/index";
 import express from "express";
-import { nanoid } from "nanoid";
-import { Request, Response,Router } from "express";
-import { urlsTable } from "../models/url.model";
+import { Request, Response, Router } from "express";
+import { shortenURL } from "../services/url.service";
+import { ensureAuthenticated } from "../middlewares/auth.middleware";
 import { shortenURLSchema } from "../validation/user.request.validation";
 
-const router:Router = express.Router();
+const router: Router = express.Router();
 
 // Extend the Request interface
 declare global {
@@ -16,43 +15,25 @@ declare global {
   }
 }
 
-router.post("/shorten", async (req: Request, res: Response) => {
-  const userId = req.user?.id;
+router.post(
+  "/shorten",
+  ensureAuthenticated,
+  async (req: Request, res: Response) => {
+    const validateInput = await shortenURLSchema.safeParseAsync(req.body);
+    if (!validateInput.success) {
+      return res.status(400).json({
+        success: false,
+        errorMessage: "Invalid Input",
+        error: validateInput.error.format(),
+      });
+    }
 
-  if (!userId)
-    return res.status(401).json({
-      success: false,
-      error: "You must be logged in to access this resource",
-    });
+    const { url, code } = validateInput.data;
 
-  const validateInput = await shortenURLSchema.safeParseAsync(req.body);
+    const result = await shortenURL(url, req.user?.id, code);
 
-  if (!validateInput.success) {
-    return res.status(400).json({
-      success: false,
-      errorMessage: "Invalid Input",
-      error: validateInput.error.format(),
-    });
+    return res.status(201).json({ success: true, result });
   }
-
-  const { url, code } = validateInput.data;
-
-  const shortCode = code ?? nanoid(6);
-
-  const [result] = await db
-    .insert(urlsTable)
-    .values({
-      shortCode,
-      targetURL: url,
-      userId,
-    })
-    .returning({
-      id: urlsTable.id,
-      shortCode: urlsTable.shortCode,
-      target: urlsTable.targetURL,
-    });
-
-  return res.status(201).json({ success: true, result });
-});
+);
 
 export default router;

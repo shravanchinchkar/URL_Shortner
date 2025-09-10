@@ -29,3 +29,17 @@ export function authMiddleware(
   req.user = payload;
   next();
 }
+
+export function ensureAuthenticated(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  if (!req.user || !req.user.id) {
+    return res.status(401).json({
+      success: false,
+      error: "You must be logged in to access this resource",
+    });
+  }
+  next();
+}
