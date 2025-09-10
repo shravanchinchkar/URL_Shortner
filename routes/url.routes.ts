@@ -1,8 +1,8 @@
 import express from "express";
 import { Request, Response, Router } from "express";
-import { shortenURL, redirectURL } from "../services/url.service";
 import { ensureAuthenticated } from "../middlewares/auth.middleware";
 import { shortenURLSchema } from "../validation/user.request.validation";
+import { shortenURL, redirectURL, getAllCodes } from "../services/url.service";
 
 const router: Router = express.Router();
 
@@ -37,8 +37,17 @@ router.post(
   }
 );
 
-// To avoid conflicts all the dynamic routes must be at the end
+// get all the shortcode for the specific user
+router.get(
+  "/codes",
+  ensureAuthenticated,
+  async (req: Request, res: Response) => {
+    const result = await getAllCodes(req.user?.id);
+    return res.status(200).json({ result });
+  }
+);
 
+// To avoid conflicts all the dynamic routes must be at the end
 // here shortcode is known as path parameter
 router.get("/:shortCode", async (req: Request, res: Response) => {
   const code = req.params.shortCode;

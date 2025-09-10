@@ -28,6 +28,15 @@ export async function redirectURL(code: string) {
     })
     .from(urlsTable)
     .where(eq(urlsTable.shortCode, code));
+
+  return result;
+}
+
+export async function getAllCodes(id: string) {
+  const result = await db
+    .select()
+    .from(urlsTable)
+    .where(eq(urlsTable.userId, id));
     
   return result;
 }
